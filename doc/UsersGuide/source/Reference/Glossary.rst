@@ -87,6 +87,9 @@ Glossary
    NWP
       Numerical Weather Prediction (NWP) takes current observations of weather and processes them with computer models to forecast the future state of the weather. 
 
+   RDHPCS
+      NOAA Research & Development High-Performance Computing Systems
+
    TC
       Tropical cyclone.
 

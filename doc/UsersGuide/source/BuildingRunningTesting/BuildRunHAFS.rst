@@ -30,7 +30,13 @@ HAFS is configured to use a particular directory structure for operations, and r
 
     export PROJECT=/path/to/project/directory
 
-Within a directory where the user has write access, create the following directories:
+Concretely, a user on Hera with disk space under the ``epic`` project might run:
+
+.. code-block:: console
+
+    export PROJECT=/scratch2/NAGAPE/epic
+
+Within a directory where the user has write access (e.g., the ``$PROJECT`` directory), create the following directories:
 
 .. code-block:: console
 
@@ -65,10 +71,10 @@ Build and Install HAFS
 
 The ``install_hafs.sh`` script builds HAFS by calling several other scripts with distinct functions:
 
-    * ``machine-setup.sh`` Determine shell, identify machine, and load modules
-    * ``build_all.sh`` Compile components: forecast, post, tracker, utils, tools, hycom, ww3, and gsi
-    * ``install_all.sh`` Copy executables to ``exec`` directory
-    * ``link_fix.sh`` Link fix files (fix files are available on disk on supported platforms)
+    * ``machine-setup.sh`` Determines shell, identifies machine, and loads modules
+    * ``build_all.sh`` Compiles components: forecast, post-processing, tracker, utils, tools, hycom, ww3, and gsi
+    * ``install_all.sh`` Copies executables to ``exec`` directory
+    * ``link_fix.sh`` Links fix files (fix files are available on disk on supported platforms)
 
 To build HAFS, navigate to ``sorc`` and run the installation script:
 
@@ -131,6 +137,7 @@ Edit the following:
     * ``tape_project`` (optional): :term:`HPSS` project name.
     * ``cpu_account``: CPU account name for submitting jobs to the batch system (may be the same as ``disk_project``)
     * ``archive=disk``: Archive location (make sure you have write permission)
+      * e.g., ``/scratch2/NAGAPE/epic/save/Jane.Doe``
     * ``CDSAVE``: HAFS parent directory
     * ``CDNOSCRUB``: Track files will be copied to this location --- contents will not be scrubbed (user must have write permission)
     * ``CDSCRUB`` If scrub is set to yes, this directory will be removed (user must have write permission)
@@ -199,8 +206,9 @@ To determine what physics schemes are included in the suites mentioned above, ru
 
 .. code-block:: console
 
-    more HAFS/sorc/hafs_forecast.fd/FV3/ccpp/suites/suite_FV3_HAFS_v1_gfdlmp_tedmf_nonsst.xml
+    more /path/to/HAFS/sorc/hafs_forecast.fd/FV3/ccpp/suites/suite_FV3_HAFS_v1_gfdlmp_tedmf_nonsst.xml
 
+where ``path/to`` is replaced by the path to the HAFS clone. 
 
 .. _namelist-files:
 
@@ -212,16 +220,27 @@ Two types of nesting configurations are available: (i) regional* and (ii) globne
 
 * Two namelist files (templates) for regional configuration are:
 
-  * ``HAFS/parm/forecast/regional/imput.nml.tmp``
+  * ``HAFS/parm/forecast/regional/input.nml.tmp``
   * ``HAFS/parm/forecast/regional/input_nest.nml.tmp``
 
 * One namelist file (template) for globnest configuration is:
 
   * ``HAFS/parm/forecast/globnest/input.nml.tmp``
 
-.. figure:: https://github.com/hafs-community/HAFS/wiki/docs_images/hafs_namelist_files.png
-    :width: 50 %
-    :alt: Example namelist file for HAFS (updated 06/29/2023)
+
+An example namelist template file for HAFS (updated 07/26/2024) starts with: 
+
+.. code-block:: console
+
+    &atmos_model_nml
+      blocksize = @[blocksize]
+      chksum_debug = .false.
+      dycore_only = .false.
+      avg_max_length = 10800.
+      ccpp_suite = '@[ccpp_suite_nml]'
+      ignore_rst_cksum = .true.
+    /
+
 
 \* operational implementation
 
@@ -269,10 +288,14 @@ Additionally, comment out any tests you do not want to run by placing a ``#`` in
 Workflow Dependencies
 -----------------------------
 
+For a non-ensemble forecast, :numref:`Table %s <task-dependencies>` describes the task dependencies. 
+
+.. _task-dependencies:
+
 .. list-table:: 
     :header-rows: 1
 
-    * - Order
+    * - Stage
       - Task
       - Description
     * - 1
@@ -296,17 +319,26 @@ Workflow Dependencies
     * - 3
       - atm_lbc#
       - Prepare atmospheric boundary conditions files
+    * - 3
+      - ocn_prep
+      - 
+    * - 3
+      - wav_prep
+      - 
     * - 4
       - atm_init
       - 
     * - 4
       - atm_init_fgat##
       - 
-    * - 3/4 ?? 
-      - ocn_prep
-      - 
     * - 4
       - obs_prep
+      - 
+    * - 5 
+      - atm_merge ??? not always necessary?
+      - 
+    * - 5 
+      - atm_merge_fgat## ??? not always necessary?
       - 
     * - 5
       - atm_vi
@@ -314,30 +346,40 @@ Workflow Dependencies
     * - 5
       - atm_vi_fgat##
       - 
-    * - 5/6 ???
+    * - 5
       - analysis
       - 
-    * - 6? (or 6.5?) --> after analysis!
+    * - 5 (when RUN_ATM_INIT==YES) or 6 
       - analysis_merge
       - 
-    * - 7
+    * - 7 (possibly sooner depending on whether it is a simple of complex workflow with additional steps)
       - forecast
       - 
     * - 8
       - unpost
       - 
-    * - 8
+    * - 9
       - atm_post
       - Post-processing of atmospheric model output
-    * - 8
+    * - 9
       - ocn_post
       - Post-processing of ocean model output
-    * - 8
+    * - 9
       - wav_post
       - Post-processing of wave model output
-    * - 9
+    * - 10
       - product
       - Product generation?
+    * - 10
+      - atm_init_ens
+      - 
+    * - 11
+      - output
+      - 
+    * - 11
+      - gempak
+      - 
+
 
 
 -----------------------------
