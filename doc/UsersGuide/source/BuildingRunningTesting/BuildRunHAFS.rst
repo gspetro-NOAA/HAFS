@@ -50,6 +50,17 @@ Within each of these directories, create a directory with your username. For exa
     mkdir $PROJECT/save/Jane.Doe
     mkdir $PROJECT/noscrub/Jane.Doe
 
+.. COMMENT: Is the portion below needed? Probably not.
+
+Within ``noscrub/<username`` two more directories: 
+
+.. code-block:: console
+
+    cd $PROJECT/noscrub/Jane.Doe
+    mkdir save && cd save
+    mkdir HAFS
+
+The resulting directory should look similar to ``/scratch2/NAGAPE/epic/noscrub/Jane.Doe/save/HAFS``.
 
 =================================
 Clone and Checkout the Repository
@@ -63,6 +74,7 @@ Clone and Checkout the Repository
 Select the branch to clone by setting the ``<BRANCH>`` option to the branch name. In general, the ``production/hafs.v#`` branch with the highest version number will be up-to-date with code for the most recent or upcoming release. The ``feature/`` branches contains code that is in development by various HAFS developers. This code is typically merged to ``develop`` and/or to the upcoming ``production/hafs.v#`` branch when it is ready. 
 
 .. note::
+
    ``develop`` is the default branch; the ``develop`` branch will be cloned if no branch is specified.
 
 ======================
@@ -117,6 +129,20 @@ Additionally, several executables should appear in a new ``HAFS/exec`` directory
 Run the HAFS System
 ===================
 
+Before beginning, it may be useful to save the path to the HAFS directory in an environtment variable to reference later:
+
+.. code-block:: console
+
+    export HAFS=$PROJECT/save/<username>/HAFS/sorc
+
+Concretely, a user on Hera with disk space under the ``epic`` project might run:
+
+.. code-block:: console
+
+    export HAFS="/scratch2/NAGAPE/epic/save/Jane.Doe/HAFS"
+
+The remaining documentation will use the environment variable ``$HAFS`` to refer to an equivalent location. Users will need to reset this environment variable for every login session. Users may enter the path to this directory instead of using an environment variable. 
+
 ----------------
 Edit system.conf
 ----------------
@@ -125,7 +151,7 @@ To configure an experiment, run:
 
 .. code-block:: console
 
-    cd $PROJECT/save/<username>/HAFS/parm
+    cd $HAFS/parm
     cp system.conf.<system> system.conf
     vi system.conf
 
@@ -281,6 +307,7 @@ Make sure to uncomment ``#set -x`` and edit ``HOMEhafs`` as appropriate. For exa
     date
 
     HOMEhafs=${HOMEhafs:-/scratch2/NAGAPE/epic/save/<username>/HAFS}
+    #HOMEhafs=${HOMEhafs:-/scratch2/NAGAPE/epic/noscrub/Gillian.Petro/save/HAFS}
 
 Additionally, comment out any tests you do not want to run by placing a ``#`` in front of the lines that start with ``./run_hafs.py``.
 
